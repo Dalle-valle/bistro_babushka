@@ -7,23 +7,110 @@
     <title>Bistro Babushka</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://use.typekit.net/xvf7tmh.css">
+
+    <link href="https://fonts.googleapis.com/css?family=Cinzel&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="apple-touch-icon" sizes="180x180" href="ikoner/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="ikoner/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="ikoner/favicon-16x16.png">
+    <link rel="manifest" href="ikoner/site.webmanifest">
+    <link rel="mask-icon" href="ikoner/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="ikoner/favicon.ico">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="ikoner/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+
 </head>
 
 <body>
-
-
     <header>
         <nav>
+            <div id="menu_burger_bar">
+                <div id="burger_menu">
+                    ☰
+                </div>
+                <div class="menu_wrapper">
+                    <div id="mylinks">
 
+
+
+                        <div id="menu1"> <a href="#">
+                                <p>Forside</p>
+                            </a></div>
+
+
+                        <div id="menu2"> <a href="#">
+                                <p>Book Bord</p>
+                            </a></div>
+
+                        <div id="menu3"> <a href="#">
+                                <p>Om</p>
+                            </a></div>
+
+
+                    </div>
+
+                </div>
+            </div>
         </nav>
-    </header>
 
+
+    </header>
+    <button id="my_button">Top</button>
+    <section id="splash">
+
+        <div class="title">
+            <h1 class="welcome">Velkommen til</h1>
+            <h1 class="italic">- Bistro -</h1>
+            <h1 class="regular">Babushka</h1>
+        </div>
+
+    </section>
+
+    <section id="detail" class="skjul">
+
+        <article class="ret">
+            <button></button>
+            <h1>NAVN</h1>
+            <img src="" alt="">
+            <p> </p>
+            <p>Oprindelse: </p>
+        </article>
+    </section>
+    <nav id="filter_menu">
+        <h2>Sortér</h2>
+        <div id="filter_menu_links">
+            <div class="wrappy"> <button class="filter valgt" data-kategorier="alle">
+                    <p>Alle</p>
+                </button>
+                <button class="filter" data-kategorier="forretter">
+                    <p>Forretter</p>
+                </button>
+                <button class="filter" data-kategorier="hovedretter">
+                    <p>Hovedretter</p>
+                </button>
+            </div>
+            <div class="wrappy">
+                <button class="filter" data-kategorier="sideorders">
+                    <p>Sideorders</p>
+                </button>
+                <button class="filter" data-kategorier="drikkevarer">
+                    <p>Drikkevarer</p>
+                </button>
+                <button class="filter" data-kategorier="desserter">
+                    <p>Desserter</p>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <h1>Menu</h1>
     <section id="index"> </section>
     <template>
-        <article>
+        <article class="ret">
+            <img src="" alt="">
 
             <h2 class="navn"></h2>
-            <img src="" alt="">
+
             <p class="beskrivelse"></p>
             <p class="pris"></p>
 
@@ -34,14 +121,21 @@
 
     <script>
         let alleRetter = [];
+        let filter = "alle";
+        const detail = document.querySelector("#detail");
 
         const sheet = "https://spreadsheets.google.com/feeds/list/17Dd7DvkPaFamNUdUKlrFgnH6POvBJXac7qyiS6zNRw0/od6/public/values?alt=json";
 
         document.addEventListener("DOMContentLoaded", start);
+        document.querySelector("#burger_menu").addEventListener("touched", menuOpenClose);
+        document.querySelector("#burger_menu").addEventListener("click", menuOpenClose);
 
 
         function start() {
             hentData();
+            klikListeners();
+            detail.classList.add("skjul");
+
 
         }
 
@@ -51,9 +145,6 @@
             alleRetter = await response.json();
             console.log(alleRetter);
             visRetter();
-
-
-
         }
 
 
@@ -66,23 +157,111 @@
 
         function visRetter() {
             const container = document.querySelector("#index");
+            container.innerHTML = "";
             const retterTemplate = document.querySelector("template");
             alleRetter.feed.entry.forEach(ret => {
-                let klon = retterTemplate.cloneNode(true).content;
-                klon.querySelector("img").src = `billeder/small/${ret.gsx$billede.$t}-sm.jpg`;
-                klon.querySelector("h2").textContent = `${ret.gsx$navn.$t}`;
-                klon.querySelector("p").textContent += `${ret.gsx$kort.$t}`;
-                klon.querySelector("p + p").textContent += `Pris: ${ret.gsx$pris.$t},-`;
+                if (filter == "alle" || filter == ret.gsx$kategori.$t) {
+                    let klon = retterTemplate.cloneNode(true).content;
+                    klon.querySelector("img").src = `billeder/small/${ret.gsx$billede.$t}-sm.jpg`;
+                    klon.querySelector("h2").textContent = `${ret.gsx$navn.$t}`;
+                    klon.querySelector("p").textContent += `${ret.gsx$kort.$t}`;
+                    klon.querySelector("p + p").textContent += `Pris: ${ret.gsx$pris.$t},-`;
+                    klon.querySelector("article").addEventListener("click", () => visDetail(ret))
+                    klon.querySelector("article").addEventListener("click", fjernClass);
 
-                container.appendChild(klon);
+                    container.appendChild(klon);
+                }
+            })
+        }
+
+        function klikListeners() {
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.addEventListener("click", filtrering);
 
             })
 
 
+        }
 
+        function filtrering() {
+            console.log("FILTER");
+            filter = this.dataset.kategorier;
+            visRetter();
+            document.querySelector("h2").textContent = this.textContent;
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.classList.remove("valgt");
 
-
+            })
+            this.classList.add("valgt");
 
         };
+
+        function fjernClass() {
+            detail.classList.remove("skjul");
+        }
+
+
+        function visDetail(ret) {
+
+            detail.querySelector("button").addEventListener("click", () => detail.classList.add("skjul"));
+            detail.querySelector("img").src = `billeder/large/${ret.gsx$billede.$t}.jpg`;
+            detail.querySelector("h1").textContent = ret.gsx$navn.$t;
+            detail.querySelector("p").textContent += ret.gsx$lang.$t;
+            detail.querySelector("p + p").textContent += ret.gsx$oprindelse.$t;
+            detail.querySelector("img").addEventListener("click", () => detail.classList.add("skjul"));
+            document.querySelector("#detail").addEventListener("click", () => detail.classList.add("skjul"));
+
+        }
+
+        function menuOpenClose() {
+            console.log("menu pressed");
+            this.classList.toggle("burger_kryds");
+
+            let x = document.querySelector("#mylinks");
+            if (x.style.display === "block") {
+                x.style.display = "none";
+
+                document.querySelector("#burger_menu").textContent = "☰";
+                document.querySelector(".menu_wrapper").classList.remove("fade");
+            } else {
+                x.style.display = "block";
+                document.querySelector("#burger_menu").textContent = "X";
+                document.querySelector(".menu_wrapper").classList.add("fade");
+            }
+        }
+        //Get the button
+
+        var mybutton = document.querySelector("#my_button");
+
+        window.onscroll = function() {
+            scrollFunction();
+        };
+
+        document.querySelector("#my_button").addEventListener("click", topFunction);
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        // When the user clicks on the button, scroll to the top of the document
+
+        function topFunction() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
     </script>
-</body></html>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+    <script>
+        AOS.init();
+
+    </script>
+
+</body>
+
+</html>
